@@ -3,39 +3,33 @@
 module tt_um_mag_calctr (
     input  wire [7:0] ui_in,     // X input
     input  wire [7:0] uio_in,    // Y input
-    output reg  [7:0] uo_out,    // Approximate square root output
-    output wire [7:0] uio_out,   // IOs: Output path
-    output wire [7:0] uio_oe,    // IOs: Enable path
-    input  wire       ena,       // Enable (ignored)
-    input  wire       clk,       // Clock signal
-    input  wire       rst_n      // Active-low reset
+    output reg  [7:0] uo_out,    // Approximate magnitude output
+    output wire [7:0] uio_out,
+    output wire [7:0] uio_oe,
+    input  wire       ena,
+    input  wire       clk,
+    input  wire       rst_n
 );
 
     assign uio_out = 8'b0;
     assign uio_oe  = 8'b0;
 
-    reg [15:0] sum_squares;
-    reg [7:0]  sqrt_est;
-
-    // Simple approximation using Newton-Raphson (2 iterations max)
-    function [7:0] sqrt_approx;
-        input [15:0] x;
-        reg [7:0] guess;
-        begin
-            guess = 8'd16; // initial guess
-            guess = (guess + (x / guess)) >> 1;
-            guess = (guess + (x / guess)) >> 1;
-            sqrt_approx = guess;
-        end
-    endfunction
-
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             uo_out <= 8'd0;
         end else begin
-            sum_squares = ui_in * ui_in + uio_in * uio_in;
-            sqrt_est = sqrt_approx(sum_squares);
-            uo_out <= sqrt_est;
+            // Approximate magnitude: max(x, y) + (min(x, y) >> 1) - 1
+            reg [7:0] x, y, max_val, min_val;
+            reg [7:0] approx;
+
+            x = ui_in;
+            y = uio_in;
+            max_val = (x > y) ? x : y;
+            min_val = (x > y) ? y : x;
+
+            approx = max_val + (min_val >> 1) - 1;
+
+            uo_out <= approx;
         end
     end
 
