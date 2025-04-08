@@ -1,6 +1,7 @@
+// Code your design here
 `default_nettype none
 
-module  tt_um_mag_calctr (
+module tt_um_mag_calctr (
     input  wire [7:0] ui_in,     // X input
     input  wire [7:0] uio_in,    // Y input
     output reg  [7:0] uo_out,    // Approximate square root output
@@ -14,12 +15,9 @@ module  tt_um_mag_calctr (
     assign uio_out = 8'b0;
     assign uio_oe  = 8'b0;
 
-    reg [7:0] sqrt_approx;
-
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
-            uo_out      <= 8'd0;
-            sqrt_approx <= 8'd0;
+            uo_out <= 8'd0;
         end else begin
             // Use internal temporary variables for calculation
             reg [15:0] sum_squares;
@@ -50,8 +48,7 @@ module  tt_um_mag_calctr (
                 end
             end
 
-            sqrt_approx <= estimate[7:0];
-            uo_out      <= estimate[7:0];
+            uo_out <= estimate[7:0];
         end
     end
 
