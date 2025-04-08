@@ -1,4 +1,3 @@
-// Code your design here
 `default_nettype none
 
 module tt_um_mag_calctr (
@@ -15,40 +14,28 @@ module tt_um_mag_calctr (
     assign uio_out = 8'b0;
     assign uio_oe  = 8'b0;
 
+    reg [15:0] sum_squares;
+    reg [7:0]  sqrt_est;
+
+    // Simple approximation using Newton-Raphson (2 iterations max)
+    function [7:0] sqrt_approx;
+        input [15:0] x;
+        reg [7:0] guess;
+        begin
+            guess = 8'd16; // initial guess
+            guess = (guess + (x / guess)) >> 1;
+            guess = (guess + (x / guess)) >> 1;
+            sqrt_approx = guess;
+        end
+    endfunction
+
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             uo_out <= 8'd0;
         end else begin
-            // Use internal temporary variables for calculation
-            reg [15:0] sum_squares;
-            reg [15:0] estimate;
-            reg [15:0] b;
-            integer i;
-
-            sum_squares = (ui_in * ui_in) + (uio_in * uio_in);
-            estimate    = 0;
-            b           = 16'h4000;  // Start from highest power of 4 below 16-bit range
-
-            // Adjust b to be less than or equal to sum_squares
-            for (i = 0; i < 15; i = i + 1) begin
-                if (b > sum_squares)
-                    b = b >> 2;
-            end
-
-            // Approximate square root using bitwise algorithm
-            for (i = 0; i < 15; i = i + 1) begin
-                if (b != 0) begin
-                    if (sum_squares >= (estimate + b)) begin
-                        sum_squares = sum_squares - (estimate + b);
-                        estimate    = (estimate >> 1) + b;
-                    end else begin
-                        estimate = estimate >> 1;
-                    end
-                    b = b >> 2;
-                end
-            end
-
-            uo_out <= estimate[7:0];
+            sum_squares = ui_in * ui_in + uio_in * uio_in;
+            sqrt_est = sqrt_approx(sum_squares);
+            uo_out <= sqrt_est;
         end
     end
 
