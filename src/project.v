@@ -14,21 +14,28 @@ module tt_um_mag_calctr (
     assign uio_out = 8'b0;
     assign uio_oe  = 8'b0;
 
+    // Declare variables here (outside the always block)
+    reg [7:0] x, y;
+    reg [7:0] max_val, min_val;
+    reg [7:0] approx;
+
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             uo_out <= 8'd0;
-        end else begin
-            // Approximate magnitude: max(x, y) + (min(x, y) >> 1) - 1
-            reg [7:0] x, y, max_val, min_val;
-            reg [7:0] approx;
-
+        end 
+        else begin
             x = ui_in;
             y = uio_in;
-            max_val = (x > y) ? x : y;
-            min_val = (x > y) ? y : x;
+
+            if (x > y) begin
+                max_val = x;
+                min_val = y;
+            end else begin
+                max_val = y;
+                min_val = x;
+            end
 
             approx = max_val + (min_val >> 1) - 1;
-
             uo_out <= approx;
         end
     end
